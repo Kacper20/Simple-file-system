@@ -1,7 +1,7 @@
 
 ###Zadaniem jest zaimplementowanie prostego systemu plików z jednopoziomowym katalogiem.
 
-Rozmiarem bloku, którzy przyjąłem jest 4kB. Pierwszy blok to superblok, który zawiera informacje o tym ile bloków danych zawartych jest w systemie, oraz ilość dostępnych i-node(czyli plików do utworzenia).
+Rozmiarem bloku, którzy przyjąłem jest 4kB. Pierwszy blok to superblok, który zawiera informacje o tym ile bloków danych zawartych jest w systemie, oraz ilość dostępnych i-node(czyli plików do utworzenia). Dzięki temu wiemy, z jakimi przesunięciami dostawać się do konkretnych sektorów(i node, dane)
 W nim zawarte są również informacje o tym ile jest wolnych i-node oraz bloków na dysku
 Następnie w pamięci znajdują się bitmapy ilustrujące zajęte i wolne bloki danych, oraz i-node.(po 1 bloku)
 Gdy blok bądź i-node jest wolny, bit ilustrujący jest ustawiony na 0, gdy zajęty - na 1.
