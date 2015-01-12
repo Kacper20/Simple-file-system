@@ -9,7 +9,7 @@ W i-node znajduje się informacja o nazwie pliku, informacja o rozmiarze, oraz w
 Gdy plik będzie kopiowany na dysk, najpierw przeszukujemy tablicę i-node w poszukiwaniu informacji, czy plik o takiej nazwie istnieje. Jeśli istnieje - wykorzystamy ten i-node. Dealokujemy bloki danych zajmowane przez plik, a następnie alokujemy te bloki dla nowego pliku.
 Gdy plik nie istnieje - sprawdzamy czy jest wystarczająca ilość wolnych bloków i jest wolny i-node. Gdy jest:
 przechodzimy po bitmapie, alokując kolejne bloki danych i zmieniając w bitmapie wartość dla nich na 1, oraz uzupełniając numery bloków w i-node.
-Kopiowanie pliku na minixa z wirtualnego systemu plików:
+####Kopiowanie pliku na minixa z wirtualnego systemu plików:
 Sprawdzamy czy jest plik o takiej nazwie, następnie sprawdzamy, czy jest obecnie używany(pozycja w bitmapie).
 Jeśli tak - kopiujemy zawartość bloków wskazywanych przez i-node(uważamy na to, aby skopiować tylko tyle, ile zajmuje plik.
 
