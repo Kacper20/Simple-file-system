@@ -2,7 +2,6 @@
 
 #include "tools.h"
 
-#define BLOCK_SIZE 4096 // SIZE OF THE BLOCKg
 /*
  * Function task is to create virtual file system in current directory 
  * int size - size of the system in kB
@@ -33,14 +32,15 @@ int create_vdisk(int size, const char *name){
 	const int sizeof_inode_table = sizeof_inode * number_of_blocks; /* sizeof inode_table in bytes */
 	int inode_blocks = ceil((double)sizeof_inode_table / BLOCK_SIZE);
 	printf("Liczba bloków: %d\n", number_of_blocks);
-	printf("Liczba blokow na i-node: %d\n")
+	printf("Liczba blokow na i-node: %d\n", inode_blocks);
 	superblock block;
-	block.disk_descriptor = 30192;
+	block.disk_descriptor = FILE_DESCRIPTOR;
 	block.blocks_for_inode_table = inode_blocks;
 	block.inode_number = number_of_blocks;
 	block.block_number = number_of_blocks;
 	block.free_inode_number = number_of_blocks;
 	block.free_block_number = number_of_blocks;
+	block.inode_size = sizeof_inode;
 	disk = fopen(name, "wb");
 	if (disk == NULL){
 		perror("Cannot create virtual disk");
@@ -85,6 +85,7 @@ int create_vdisk(int size, const char *name){
 			perror("Cannot write user-data on virtual disk");
 		}
 	}
+	fclose(disk);
 	return 0;
 }
 int main(int argc, char **argv){
@@ -113,7 +114,7 @@ int main(int argc, char **argv){
 		printf("Disk has been created successfully\n");
 	}
 	else{
-		printf('Disk was not created!\n');
+		printf("Disk was not created!\n");
 	}
 	return 0;
 	
