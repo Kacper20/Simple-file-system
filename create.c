@@ -1,9 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
+
 
 #include "tools.h"
 
@@ -12,7 +7,7 @@
  * Function task is to create virtual file system in current directory 
  * int size - size of the system in kB
  * const char *msg - name of the file system
- * returns: 1 - completed successfully
+ * returns: 0 - completed successfully
  * returns: -1 - error
  */
 /*
@@ -28,18 +23,25 @@ void fill_buffer(char *buff, int size, char number){
 		buff[i] = number;
 	}
 }
-int create_vdisk(int size, const char *msg){
+int create_vdisk(int size, const char *name){
+	
+	
 	FILE *disk;
 	char buff[BLOCK_SIZE];
-	int number_of_blocks = size / 4;
-	int i = 0;
+	int number_of_blocks = ceil(size / 4.0);
+	const int sizeof_inode = sizeof(inode) + sizeof(short) * number_of_blocks;
+	const int sizeof_inode_table = sizeof_inode * number_of_blocks; /* sizeof inode_table in bytes */
+	int inode_blocks = ceil((double)sizeof_inode_table / BLOCK_SIZE);
+	printf("Liczba bloków: %d\n", number_of_blocks);
+	printf("Liczba blokow na i-node: %d\n")
 	superblock block;
 	block.disk_descriptor = 30192;
+	block.blocks_for_inode_table = inode_blocks;
 	block.inode_number = number_of_blocks;
 	block.block_number = number_of_blocks;
-	block.free_inode_number = 0;
-	block.free_block_number = 0;
-	disk = fopen(msg, "wb");
+	block.free_inode_number = number_of_blocks;
+	block.free_block_number = number_of_blocks;
+	disk = fopen(name, "wb");
 	if (disk == NULL){
 		perror("Cannot create virtual disk");
 		return -1;
@@ -57,7 +59,7 @@ int create_vdisk(int size, const char *msg){
 		perror("Cannot write bitmap on virtual disk");
 	}
 	/* Write bitmap of data blocks */
-	if (fwrite(buff, BLOCK_SIZE, 4, disk) != 1){
+	if (fwrite(buff, BLOCK_SIZE, 1, disk) != 1){
 		perror("Cannot write bitmap on virtual disk");
 	}
 	/* Now we have to write i-nodes to disc.
@@ -65,13 +67,54 @@ int create_vdisk(int size, const char *msg){
 	sizeof(inode_struct) + (sizeof(short) * number_of_blocks)
 	number of inodes = number of blocks on disk.
 	*/
-	const int sizeof_inode = sizeof(inode) + sizeof(short) * number_of_blocks;
-	printf("rozmiar i-node to %d", sizeof_inode);
-    
+
+	int i;
+	for (int i = 0; i < number_of_blocks; i++){
+		if (fwrite(buff, sizeof_inode, 1, disk) != 1){
+			perror("Cannot write i-node table on virtual disk");
+		}
+	}
+	/* Align data well! */
+	int empty_bytes_to_add = BLOCK_SIZE - sizeof_inode_table % BLOCK_SIZE;
+	if (fwrite(buff, empty_bytes_to_add, 1, disk) != 1){
+		perror("Cannot write bitmap on virtual disk");
+	}
+	/* Now it's time to write user-data blocks.*/
+	for (i = 0; i < number_of_blocks; i ++){
+		if (fwrite(buff, BLOCK_SIZE, 1, disk) != 1){
+			perror("Cannot write user-data on virtual disk");
+		}
+	}
 	return 0;
 }
 int main(int argc, char **argv){
-	create_vdisk(4, "marko");
+	int size;
+	char *name;
+	if (argc == 2){
+		if (strcmp(argv[1], "--help") != 0){
+			printf("Nieprawidlowe wywolanie. Wiecej informacji: create --help\n");
+			return -1;
+		} 
+		else{
+			printf("Funkcja pozwalajaca stworzyc wirtualny dysk.\n");
+			printf("Uzycie: create ROZMIAR_DYSKU NAZWA\n");
+			return 0;
+		}
+	}
+	else if (argc != 3){
+		printf("Nieprawidlowe wywolanie. Wiecej informacji : create --help\n");
+		return -1;
+	}
+	size = atoi(argv[1]);
+	name = argv[2];
+	
+	
+	if (create_vdisk(size, name) == 0){
+		printf("Disk has been created successfully\n");
+	}
+	else{
+		printf('Disk was not created!\n');
+	}
 	return 0;
 	
 }
