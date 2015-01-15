@@ -26,3 +26,4 @@ typedef struct inode{
 
 void write_string_to_array(char *str, char arr[]);
 void read_and_check_superblock(superblock *block, FILE *disk);
+int remove_file_from_vd(char *filename, char *vd_name);
