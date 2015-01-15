@@ -14,12 +14,13 @@ int list_vd_files(char *vd_name){
 	/*Read superblock into memory */
 	read_and_check_superblock(&block, disk);
 	/* If we have only free inodes - 0 files are in disk right now */
-	if (block.free_inode_number == block.inode_number){
-		printf("No files actually!\n");
-		return 0;
-	}
+	// if (block.free_inode_number == block.inode_number){
+// 		printf("No files actually!\n");
+// 		return 0;
+// 	}
 	/* we have files in file system - list it */
 	files_to_list = block.inode_number - block.free_inode_number; /* number of files in file-system */
+	printf("inode number: %d a free: %d\n", block.inode_number, block.free_inode_number);
 	printf("%d files:\n", files_to_list);
 	int inode_table_bytes =  ceil(block.inode_number / 8.0);/* inode_table actual bytes number (without any free space )*/
 	inode_eff_table = (char *)malloc(inode_table_bytes);
@@ -41,6 +42,7 @@ int list_vd_files(char *vd_name){
 	for (int i = 0; i < block.inode_number; i++){
 		unsigned char byte = inode_eff_table[counter];
 		unsigned char result = mask & byte;
+		printf("Byte: %x", byte);
 		if (result > 0){
 			/* We have found inode - we should list it.*/
 			/* Firstly move pointer to this inode */
@@ -63,8 +65,10 @@ int list_vd_files(char *vd_name){
 			mask = 0x80;
 			counter ++;
 		}
+		if (files_listed == files_to_list){
+			break;
+		}
 	}
-	
 	
 	free(inode_eff_table);
 	return 0;
@@ -73,7 +77,16 @@ int list_vd_files(char *vd_name){
 
 int main(int argc, char **argv){
 	
-	list_vd_files(argv[1]);
+	if (argc == 2){
+		if (strcmp(argv[1], "--help") == 0){
+			printf("Funkcja uzywana do listowania plikow znajdujacych sie na wirtualnym systemie plikow\n");
+			printf("USAGE: ./lsvd NAME_OD_DISK\n");
+			return 0;
+		} 
+		else{
+			list_vd_files(argv[1]);
+		}
+	}
 	
 	return 0;
 }
