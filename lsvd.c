@@ -14,10 +14,10 @@ int list_vd_files(char *vd_name){
 	/*Read superblock into memory */
 	read_and_check_superblock(&block, disk);
 	/* If we have only free inodes - 0 files are in disk right now */
-	// if (block.free_inode_number == block.inode_number){
-// 		printf("No files actually!\n");
-// 		return 0;
-// 	}
+	if (block.free_inode_number == block.inode_number){
+		printf("No files actually!\n");
+		return 0;
+	}
 	/* we have files in file system - list it */
 	files_to_list = block.inode_number - block.free_inode_number; /* number of files in file-system */
 	printf("inode number: %d a free: %d\n", block.inode_number, block.free_inode_number);

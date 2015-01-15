@@ -1,15 +1,19 @@
 #include "tools.h"
-void read_and_check_superblock(superblock *block, FILE *disk){
+int read_and_check_superblock(superblock *block, FILE *disk){
 	if (fread(block, sizeof(superblock), 1, disk) != 1){
 		perror("Cannot read superblock");
+		return -1;
 	}
 	if (block->disk_descriptor != FILE_DESCRIPTOR){
 		perror("It's not supported file system\n");
+		return -1;
 	}
 	/* we have to move file pointer to the begin of i-node table */
 	if (fseek(disk, BLOCK_SIZE - sizeof(superblock), SEEK_CUR) != 0){
 		perror("Cannot move file pointer");
+		return -1;
 	}
+	return 0;
 }
 void write_string_to_array(char *str, char arr[]){
 	int i = 0;
@@ -20,6 +24,40 @@ void write_string_to_array(char *str, char arr[]){
 		temp = str[i];
 	}
 	arr[i] = '\0';
+}
+
+void read_bitmap_blocks(int eff_size, char *inode_bitmap, char *data_bitmap, FILE *disk){
+	/* Move to the begin of inode bitmap */
+	if (fseek(disk, BLOCK_SIZE, SEEK_SET) != 0){
+		perror("Cannot move file pointer");
+	}
+	if (fread(inode_bitmap, eff_size, 1, disk) != 1){
+		perror("Cannot read inode_table");
+	}
+	if (fseek(disk, BLOCK_SIZE - eff_size, SEEK_CUR) != 0){
+		perror("Cannot move file pointer");
+	}
+	if (fread(data_bitmap, eff_size, 1, disk) != 1){
+		perror("Cannot read inode_table");
+	}
+	
+}
+void kseek(FILE *file, int offset, int mode){
+	if (fseek(file, offset, mode) != 0){
+		perror("Cannot move file pointer -from kseek");
+	}
+	
+}
+void kread(void *buff, int size, FILE *file){
+	if(fread(buff, size, 1, file) != 1){
+		perror("Cannot read file - from kread");
+	}
+	
+}
+void kwrite(void *buff, int size, FILE *file){
+	if(fwrite(buff, size, 1, file) != 1){
+		perror("Cannot write - from kwrite");
+	}
 }
 
 int remove_file_from_vd(char *filename, char *vd_name){

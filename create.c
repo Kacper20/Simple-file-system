@@ -31,6 +31,7 @@ int create_vdisk(int size, const char *name){
 	const int sizeof_inode = sizeof(inode) + sizeof(short) * number_of_blocks;
 	const int sizeof_inode_table = sizeof_inode * number_of_blocks; /* sizeof inode_table in bytes */
 	int inode_blocks = ceil((double)sizeof_inode_table / BLOCK_SIZE);
+	int bitmap_bytes = ceil(number_of_blocks / 8.0);/* inode_table actual bytes number (without any free space )*/
 	printf("Liczba bloków: %d\n", number_of_blocks);
 	printf("Liczba blokow na i-node: %d\n", inode_blocks);
 	superblock block;
@@ -41,6 +42,7 @@ int create_vdisk(int size, const char *name){
 	block.free_inode_number = number_of_blocks;
 	block.free_block_number = number_of_blocks;
 	block.inode_size = sizeof_inode;
+	block.bytes_for_bitmap = bitmap_bytes;
 	disk = fopen(name, "wb");
 	if (disk == NULL){
 		perror("Cannot create virtual disk");

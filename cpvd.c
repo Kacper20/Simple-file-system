@@ -115,28 +115,30 @@ int copy_file_to_vd(char *filename, char *vd_name){
 			printf("mask: %x", mask);
 			/* We have found unused i-node */
 			/* Firstly move pointer to this inode in inode-table */
-			if (fseek(disk, i *block.inode_size, SEEK_CUR) != 0){
+			if (fseek(disk, i * block.inode_size, SEEK_CUR) != 0){
 				perror("Cannot move file pointer");
 			}
 			inode i_node;
 			write_string_to_array(filename, i_node.filename);
 			i_node.size_of_file = size_file_to_copy;
 			/*Now write i-node description to i_node table */
+			printf("przed zapisaniem inode description: %lu\n", ftell(disk));
 			if (fwrite(&i_node, sizeof(inode), 1, disk) != 1){
 				perror("Cannot write ");
 			}
+			
 			/* Inode description is written - now if file is non 0 size - take care of data blocks */
 			/* Now read pointers, update them, and write to the */
 			if (fread(pointers_to_blocks, sizeof(short) * block.block_number, 1, disk) != 1){
 				perror("Cannot read pointers to blocks ");
 			}
-			if (size_file_to_copy > 0){
+			if (size_file_to_copy > 0){ 
 				mask = 0x80;
 				counter = 0;
 				int pointer_counter = 0;
 				secondDescriptor = fopen(vd_name, "r+b"); 
 				temp = ceil((double)block.inode_size * block.block_number / BLOCK_SIZE); /*Block number for inode_structure_table */
-				if (fseek(secondDescriptor, 3 * BLOCK_SIZE + temp, SEEK_CUR) != 0){
+				if (fseek(secondDescriptor, (3 + temp) * BLOCK_SIZE , SEEK_CUR) != 0){
 					perror("Cannot move file pointer");
 				}
 				for(int i = 0; i < block.block_number; i++){
@@ -151,14 +153,18 @@ int copy_file_to_vd(char *filename, char *vd_name){
 						if (fwrite(buffer, temp, 1, secondDescriptor) != 1){
 							perror("Cannot wrote to file on vd ");
 						}
+						block.free_block_number --;
 						if (size_file_to_copy < 0){
+							
 							fclose(secondDescriptor);
 							if (fseek(disk, -sizeof(short) * block.block_number, SEEK_CUR) != 0){
 								perror("Cannot move file pointer");
 							}
+							printf("przy zapisywaniu pointers inode description: %lu\n", ftell(disk));
 							if (fwrite(pointers_to_blocks, sizeof(short) * block.block_number, 1, disk) != 1){
 								perror("Cannot read pointers to blocks ");
 							}
+							
 							break;							
 						}
 						if (fseek(secondDescriptor, BLOCK_SIZE, SEEK_CUR) != 0){ /* Move to another block of data! */
@@ -188,7 +194,9 @@ int copy_file_to_vd(char *filename, char *vd_name){
 			counter ++;
 		}
 	}/* koniec fora*/
-	/* set file pointer at the beginning */
+	
+	
+	
 	if (fseek(disk, 0, SEEK_SET) != 0){
 		perror("Cannot move file pointer");
 	}
@@ -201,12 +209,13 @@ int copy_file_to_vd(char *filename, char *vd_name){
 	if (fwrite(inode_eff_table, inode_table_bytes, 1, disk) != 1){
 		perror("Cannot write ");
 	}
-	
 	free(inode_eff_table);
 	free(pointers_to_blocks);
 	free(data_eff_table);
 	fclose(file_to_copy);
 	fclose(disk);
+	
+	
 	return 0;
 
 }
