@@ -19,7 +19,7 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 		return -1;
 	}
 	if (read_and_check_superblock(&block, disk) != 0){
-		
+		return -1;
 	}
 	if (block.inode_number == block.free_inode_number){
 		printf("No file to copy!\n");
