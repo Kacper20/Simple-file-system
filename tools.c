@@ -84,15 +84,17 @@ int remove_file_from_vd(char *filename, char *vd_name){
 	inode_bitmap = (char *)malloc(block.bytes_for_bitmap);
 	data_bitmap = (char *)malloc(block.bytes_for_bitmap);
 	read_bitmap_blocks(block.bytes_for_bitmap, inode_bitmap, data_bitmap, disk);
-	kseek(disk, (3 + block.blocks_for_inode_table) * BLOCK_SIZE, SEEK_SET); // Move file descriptor to the inode structure table
+	kseek(disk, 3  * BLOCK_SIZE, SEEK_SET); // Move file descriptor to the inode structure table
 	/* Now we're in inode table - let's found if we have file like this */
 	unsigned char mask = 0x80;
 	for (int i = 0; i < block.inode_number; i++){
 		byte = inode_bitmap[counter];
+		printf("Byte: %x", byte);
 		byte = byte & mask; /* if it's > 0 - inode is in use, we could check inode table if file name is the same! */
 		if (byte > 0){
 			inode temp_inode;
 			kread(&temp_inode, sizeof(inode), disk);
+			printf("inode name: %s", temp_inode.filename);
 			if (strcmp(filename, temp_inode.filename) == 0){ /* We have file, that has to be deleted */
 				block.free_inode_number ++;
 				inode_bitmap[counter] = inode_bitmap[counter] ^ mask; /* remove it from inode bitmap */

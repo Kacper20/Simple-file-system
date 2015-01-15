@@ -25,7 +25,7 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 		printf("No file to copy!\n");
 		return -1;
 	}
-	pointers_to_blocks = (short *)malloc(sizeof(short) * block.block_number); // Pointers in inode structure*/
+	pointers_to_blocks = (short *)malloc(block.inode_size - sizeof(inode)); // Pointers in inode structure*/
 	inode_bitmap = (char *)malloc(block.bytes_for_bitmap);
 	data_bitmap = (char *)malloc(block.bytes_for_bitmap);
 	read_bitmap_blocks(block.bytes_for_bitmap, inode_bitmap, data_bitmap, disk);
@@ -39,7 +39,9 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 		temp_byte = inode_bitmap[counter];
 		temp_byte = temp_byte & mask;
 		if (temp_byte > 0){ /* if inode is in use */
+			printf("siema");
 			kread(&temp_inode, sizeof(inode), disk); // Read inode into the memory, to check it's filename
+			printf("elo");
 			if (strcmp(temp_inode.filename, filename) == 0){ // If it's this file 
 			destinationFile = fopen(destination_path, "wb");/* opens file on disk */
 				if (temp_inode.size_of_file > 0){
@@ -48,15 +50,18 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 					kread(pointers_to_blocks, block.inode_size - sizeof(inode), disk); // read pointers table
 					kseek(disk, (3 + block.blocks_for_inode_table) * BLOCK_SIZE, SEEK_SET); // move to the begin of data structure table
 					/* Now move to the place where first data block is !!!! */
+					printf("trzeba przesunac o: %d", pointers_to_blocks[counter]);
 					kseek(disk, pointers_to_blocks[counter], SEEK_CUR);
 					counter ++; // move to another entry of pointers table
-					while(temp_size < 0){ // we're always starting in the good place to read data - kseek does the work! :) 
+					while(temp_size > 0){ // we're always starting in the good place to read data - kseek does the work! :) 
 						temp_size -= BLOCK_SIZE;
 						if (temp_size > 0){ // We should read all of the block
+							printf("wiekszy");
 							kread(buffer, BLOCK_SIZE, disk);
 							kwrite(buffer, BLOCK_SIZE, destinationFile);
 						}
 						else{ // we should read temp_size + BLOCK_SIZE files :)
+							printf("mniejszy");
 							kread(buffer, temp_size + BLOCK_SIZE, disk);
 							kwrite(buffer, temp_size + BLOCK_SIZE, disk);
 						}
