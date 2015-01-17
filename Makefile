@@ -5,3 +5,4 @@ all:
 	cc -o rmvd rmvd.c tools.c -lm
 	cc -o cpdsk cpdsk.c tools.c -lm
 	cc -o dgvs dgvs.c tools.c -lm
+	cc -o copy_data_blocks copy_data_blocks.c tools.c -lm

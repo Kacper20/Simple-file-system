@@ -3,6 +3,7 @@
 int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 	FILE *destinationFile;
 	FILE *disk;
+	FILE *temp; //temporary pointer to read
 	superblock block;
 	char *inode_bitmap;
 	char *data_bitmap;
@@ -49,12 +50,13 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 			if (strcmp(temp_inode.filename, filename) == 0){ // If it's this file 
 			printf("nazwa jest taka sama\n");
 			destinationFile = fopen(destination_path, "wb");/* opens file on disk */
+			temp = fopen(vdisk_name, "rb");
 				if (temp_inode.size_of_file > 0){
 					printf("wiekszy od 0\n");
 					counter = 0;
 					int temp_size = temp_inode.size_of_file;
 					kread(pointers_to_blocks, block.inode_size - sizeof(inode), disk); // read pointers table
-					kseek(disk, (3 + block.blocks_for_inode_table) * BLOCK_SIZE, SEEK_SET); // move to the begin of data structure table
+					kseek(temp, (3 + block.blocks_for_inode_table) * BLOCK_SIZE, SEEK_SET); // move to the begin of data structure table
 					/* Now move to the place where first data block is !!!! */
 					kseek(disk, pointers_to_blocks[counter], SEEK_CUR);
 					counter ++; // move to another entry of pointers table
@@ -62,21 +64,23 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 						temp_size -= BLOCK_SIZE;
 						if (temp_size > 0){ // We should read all of the block
 							printf("mniejszy");
-								fflush(stdout);
-							kread(buffer, BLOCK_SIZE, disk);
+							fflush(stdout);
+							printf("czytajac caly blokjestem na! %lu\n", ftell(temp));
+							kread(buffer, BLOCK_SIZE, temp);							
 							kwrite(buffer, BLOCK_SIZE, destinationFile);
 						}
 						else{ // we should read temp_size + BLOCK_SIZE files :)
 							printf("mniejszy");
+							printf("czytajac %d blokjestem na! %lu\n",temp_size + BLOCK_SIZE, ftell(temp));
 							fflush(stdout);
-							kread(buffer, temp_size + BLOCK_SIZE, disk);
+							kread(buffer, temp_size + BLOCK_SIZE, temp);
 							kwrite(buffer, temp_size + BLOCK_SIZE, destinationFile);
 						}
-						kseek(disk , (pointers_to_blocks[counter] - pointers_to_blocks[counter]-1) * BLOCK_SIZE, SEEK_CUR); // Move PROPERLY !!!!!
 						counter ++;
 					}	
 				}
 				fclose(destinationFile);
+				fclose(temp);
 				break;
 			}
 		}

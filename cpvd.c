@@ -118,13 +118,18 @@ int copy_file_to_vd(char *filename, char *vd_name){
 					if (result == 0){/*We have found data block  - bit is 0!*/
 						temp = size_file_to_copy > BLOCK_SIZE ? BLOCK_SIZE : size_file_to_copy;
 						size_file_to_copy -= BLOCK_SIZE;
+						
 						kread(buffer, temp, file_to_copy);
+						printf("Zapisuje na: %lu rozmiar: %d\n", ftell(secondDescriptor), temp);
 						kwrite(buffer, temp, secondDescriptor);
 						block.free_block_number --;
-						kseek(secondDescriptor, BLOCK_SIZE, SEEK_CUR);
+						// kseek(secondDescriptor, BLOCK_SIZE, SEEK_CUR);
+						printf("zapisujemy na pozycje: %d wartosc %d", pointer_counter, i);
 						pointers_to_blocks[pointer_counter] = i;
+						printf("pointer: %d\n", pointers_to_blocks[pointer_counter]);
 						data_bitmap[counter] = data_bitmap[counter] | mask;
 						mask = mask >> 1;
+						pointer_counter++;
 						if (mask == 0){
 							mask = 0x80;
 							counter ++;
@@ -136,6 +141,7 @@ int copy_file_to_vd(char *filename, char *vd_name){
 							break;							
 						}	
 					}/* do result */
+					
 				}/* do for */
 			}/* fo file size */
 			/* I-node is now used by the file system - wrote information about it into the bitmap file */
@@ -148,6 +154,7 @@ int copy_file_to_vd(char *filename, char *vd_name){
 			counter ++;
 		}
 	}/* koniec fora*/
+	printf("Pointers: 1 : %d, 2: %d\n", pointers_to_blocks[0], pointers_to_blocks[1]);
 	kseek(disk, 0, SEEK_SET);
 	kwrite(&block, sizeof(superblock), disk);
 	kseek(disk, BLOCK_SIZE - sizeof(superblock), SEEK_CUR);

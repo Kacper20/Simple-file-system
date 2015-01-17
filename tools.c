@@ -103,7 +103,7 @@ int remove_file_from_vd(char *filename, char *vd_name){
 						perror("Cannot read bitmap_table");
 					}
 					/* Now - delete blocks from blocks bitmap */
-
+					printf("pierwszy w pointerach jest: %hu, a drugi: %hu\n", pointers_to_blocks[0], pointers_to_blocks[1]);
 					int blocks_count = ceil((double)temp_inode.size_of_file / BLOCK_SIZE); /* number of blocks that file consist */
 					temp = 0;
 					mask = 0x80;

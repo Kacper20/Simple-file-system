@@ -43,27 +43,21 @@ int create_vdisk(int size, const char *name){
 	block.free_block_number = number_of_blocks;
 	block.inode_size = sizeof_inode;
 	block.bytes_for_bitmap = bitmap_bytes;
+	
 	disk = fopen(name, "wb");
 	if (disk == NULL){
 		perror("Cannot create virtual disk");
 		return -1;
 	}
 	fill_buffer(buff, BLOCK_SIZE, 0);
-	if (fwrite(&block, sizeof(superblock), 1, disk) != 1){
-		perror("Cannot write bitmap on virtual disk");
-	}
+	kwrite(&block, sizeof(superblock), disk);
 	/* Now we want to write another number of bytes to align it well */
-	if (fwrite(&block, BLOCK_SIZE - sizeof(superblock), 1, disk) != 1){
-		perror("Cannot write bitmap on virtual disk");
-	}
+
+	kwrite(&block, BLOCK_SIZE - sizeof(superblock), disk);
 	/*Write bitmap of inodes */
-	if (fwrite(buff, BLOCK_SIZE, 1, disk) != 1){
-		perror("Cannot write bitmap on virtual disk");
-	}
+	kwrite(buff, BLOCK_SIZE, disk);
 	/* Write bitmap of data blocks */
-	if (fwrite(buff, BLOCK_SIZE, 1, disk) != 1){
-		perror("Cannot write bitmap on virtual disk");
-	}
+	kwrite(buff, BLOCK_SIZE, disk);
 	/* Now we have to write i-nodes to disc.
 	i-node size:
 	sizeof(inode_struct) + (sizeof(short) * number_of_blocks)
@@ -72,20 +66,14 @@ int create_vdisk(int size, const char *name){
 
 	int i;
 	for (int i = 0; i < number_of_blocks; i++){
-		if (fwrite(buff, sizeof_inode, 1, disk) != 1){
-			perror("Cannot write i-node table on virtual disk");
-		}
+		kwrite(buff, sizeof_inode, disk);
 	}
 	/* Align data well! */
 	int empty_bytes_to_add = BLOCK_SIZE - sizeof_inode_table % BLOCK_SIZE;
-	if (fwrite(buff, empty_bytes_to_add, 1, disk) != 1){
-		perror("Cannot write bitmap on virtual disk");
-	}
+	kwrite(buff, empty_bytes_to_add, disk);
 	/* Now it's time to write user-data blocks.*/
 	for (i = 0; i < number_of_blocks; i ++){
-		if (fwrite(buff, BLOCK_SIZE, 1, disk) != 1){
-			perror("Cannot write user-data on virtual disk");
-		}
+		kwrite(buff, BLOCK_SIZE, disk);
 	}
 	fclose(disk);
 	return 0;
