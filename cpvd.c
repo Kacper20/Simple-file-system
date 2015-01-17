@@ -105,6 +105,7 @@ int copy_file_to_vd(char *filename, char *vd_name){
 			/* Inode description is written - now if file is non 0 size - take care of data blocks */
 			/* Now read pointers, update them, and write to the */
 			kread(pointers_to_blocks, sizeof(short) * block.block_number, disk);
+			printf("rozmiar to %d\n", size_file_to_copy);
 			if (size_file_to_copy > 0){ 
 				mask = 0x80;
 				counter = 0;
@@ -114,8 +115,10 @@ int copy_file_to_vd(char *filename, char *vd_name){
 				kseek(secondDescriptor, (3 + temp) * BLOCK_SIZE, SEEK_CUR);
 				for(int i = 0; i < block.block_number; i++){
 					byte = data_bitmap[counter];
+					printf("bajt ma: %x\n", byte);
+					printf("maska ma: %x\n", mask);
 					result = mask & byte;
-					if (result == 0){/*We have found data block  - bit is 0!*/
+					if (result == 0){/*We have found data block  - bit is 0!*/						
 						temp = size_file_to_copy > BLOCK_SIZE ? BLOCK_SIZE : size_file_to_copy;
 						size_file_to_copy -= BLOCK_SIZE;
 						
@@ -123,24 +126,30 @@ int copy_file_to_vd(char *filename, char *vd_name){
 						printf("Zapisuje na: %lu rozmiar: %d\n", ftell(secondDescriptor), temp);
 						kwrite(buffer, temp, secondDescriptor);
 						block.free_block_number --;
-						// kseek(secondDescriptor, BLOCK_SIZE, SEEK_CUR);
 						printf("zapisujemy na pozycje: %d wartosc %d", pointer_counter, i);
 						pointers_to_blocks[pointer_counter] = i;
 						printf("pointer: %d\n", pointers_to_blocks[pointer_counter]);
 						data_bitmap[counter] = data_bitmap[counter] | mask;
-						mask = mask >> 1;
-						pointer_counter++;
-						if (mask == 0){
-							mask = 0x80;
-							counter ++;
-						}
+						
 						if (size_file_to_copy < 0){	
 							fclose(secondDescriptor);
 							kseek(disk, -sizeof(short) * block.block_number, SEEK_CUR);
 							kwrite(pointers_to_blocks, sizeof(short) * block.block_number, disk);
 							break;							
-						}	
+						}
+						pointer_counter++; // ZMIENIONE, NEWRALGICZNE
+							
 					}/* do result */
+					else{
+						kseek(secondDescriptor, BLOCK_SIZE, SEEK_CUR);
+					}
+					mask = mask >> 1;
+					if (mask == 0){
+						mask = 0x80;
+						counter ++;
+					}
+					
+					
 					
 				}/* do for */
 			}/* fo file size */
