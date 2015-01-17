@@ -49,7 +49,7 @@ int create_vdisk(int size, const char *name){
 		perror("Cannot create virtual disk");
 		return -1;
 	}
-	fill_buffer(buff, BLOCK_SIZE, 0);
+	fill_buffer(buff, BLOCK_SIZE , 0);
 	kwrite(&block, sizeof(superblock), disk);
 	/* Now we want to write another number of bytes to align it well */
 
@@ -63,11 +63,13 @@ int create_vdisk(int size, const char *name){
 	sizeof(inode_struct) + (sizeof(short) * number_of_blocks)
 	number of inodes = number of blocks on disk.
 	*/
-
+	char *buffer2 = (char *)malloc(sizeof(char) * sizeof_inode);
+	fill_buffer(buffer2, sizeof_inode, 0);
 	int i;
 	for (int i = 0; i < number_of_blocks; i++){
-		kwrite(buff, sizeof_inode, disk);
+		kwrite(buffer2, sizeof_inode, disk);
 	}
+	free(buffer2);
 	/* Align data well! */
 	int empty_bytes_to_add = BLOCK_SIZE - sizeof_inode_table % BLOCK_SIZE;
 	kwrite(buff, empty_bytes_to_add, disk);
@@ -106,6 +108,7 @@ int main(int argc, char **argv){
 	else{
 		printf("Disk was not created!\n");
 	}
+	
 	return 0;
 	
 }
