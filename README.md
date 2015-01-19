@@ -1,4 +1,5 @@
 
+
 ###Zadaniem jest zaimplementowanie prostego systemu plików z jednopoziomowym katalogiem.
 
 Rozmiarem bloku, którzy przyjąłem jest 4kB. Pierwszy blok to superblok, który zawiera informacje o tym ile bloków danych zawartych jest w systemie, oraz ilość dostępnych i-node(czyli plików do utworzenia). Dzięki temu wiemy, z jakimi przesunięciami dostawać się do konkretnych sektorów(i node, dane)
@@ -20,11 +21,10 @@ Jeśli tak - kopiujemy zawartość bloków wskazywanych przez i-node(uważamy na
 | 2                         | Bitmapy i-node   | BLOCK_SIZE         |
 | 3                         | Bitmapy danych   | 2 * BLOCK_SIZE     |
 | 4                         | Struktury i-node | 3 * BLOCK_SIZE     |
-<<<<<<< HEAD
 | 5                         | Bloki danych     |(3 + ceil((sizeof(inode) * number_of_blocks) / BLOCK_SIZE) * BLOCK_SIZE|
-=======
-| 5                         | Bloki danych     |                    |
->>>>>>> FETCH_HEAD
+
+
+
 
 
 
