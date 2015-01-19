@@ -131,10 +131,10 @@ int copy_file_to_vd(char *filename, char *vd_name){
 						block.free_block_number --;
 						// printf("zapisujemy na pozycje: %d wartosc %d", pointer_counter, i);
 						pointers_to_blocks[pointer_counter] = i;
-						printf("pointer: %d\n", pointers_to_blocks[pointer_counter]);
+						// printf("pointer: %d\n", pointers_to_blocks[pointer_counter]);
 						data_bitmap[counter] = data_bitmap[counter] | mask;
 						
-						if (size_file_to_copy < 0){	
+						if (size_file_to_copy <= 0){	
 							fclose(secondDescriptor);
 							kseek(disk, -sizeof(short) * block.block_number, SEEK_CUR);
 							kwrite(pointers_to_blocks, sizeof(short) * block.block_number, disk);
@@ -187,9 +187,9 @@ int copy_file_to_vd(char *filename, char *vd_name){
 int main(int argc, char **argv){
 	char *vmachine;
 	
-	if (argc  < 3){
-		if (argc == 2 && strcmp(argv[2], "--help") == 0){
-			printf("Uzycie:\n./cpvd PLIKI[...] VIRTUAL FILE SYSTEM");
+	if (argc < 3){
+		if (argc == 2 && strcmp(argv[1], "--help") == 0){
+			printf("Uzycie:\n./cpvd PLIKI[...] VIRTUAL FILE SYSTEM\n");
 			return 0;
 		}
 		else{

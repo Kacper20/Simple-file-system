@@ -60,17 +60,13 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 						if (temp_size > 0){ // We should read all of the block
 							kread(buffer, BLOCK_SIZE, temp);							
 							kwrite(buffer, BLOCK_SIZE, destinationFile);
-							kseek(temp,  (pointers_to_blocks[counter] - pointers_to_blocks[counter-1] -1)*BLOCK_SIZE,SEEK_CUR);
-							
+							kseek(temp,  (pointers_to_blocks[counter] - pointers_to_blocks[counter-1] -1)*BLOCK_SIZE,SEEK_CUR);	
 						}
 						else{ // we should read temp_size + BLOCK_SIZE files :)
 							fflush(stdout);
 							kread(buffer, temp_size + BLOCK_SIZE, temp);
 							kwrite(buffer, temp_size + BLOCK_SIZE, destinationFile);
 						}
-						
-						
-						
 					}	
 				}
 				fclose(destinationFile);
