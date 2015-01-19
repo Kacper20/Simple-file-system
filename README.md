@@ -13,6 +13,14 @@ przechodzimy po bitmapie, alokując kolejne bloki danych i zmieniając w bitmapi
 ####Kopiowanie pliku na minixa z wirtualnego systemu plików:
 Sprawdzamy czy jest plik o takiej nazwie, następnie sprawdzamy, czy jest obecnie używany(pozycja w bitmapie).
 Jeśli tak - kopiujemy zawartość bloków wskazywanych przez i-node(uważamy na to, aby skopiować tylko tyle, ile zajmuje plik.
+####Struktura logiczna:
+| Numer struktury logicznej | Nazwa            | Offset od początku |
+|---------------------------|------------------|--------------------|
+| 1                         | Superblok        | 0                  |
+| 2                         | Bitmapy i-node   | BLOCK_SIZE         |
+| 3                         | Bitmapy danych   | 2 * BLOCK_SIZE     |
+| 4                         | Struktury i-node | 3 * BLOCK_SIZE     |
+| 5                         | Bloki danych     |                    |
 
 
 
