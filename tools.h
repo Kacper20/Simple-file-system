@@ -8,7 +8,9 @@
 #define FILE_DESCRIPTOR 30192
 #define FILENAME_LIMIT 256
 #define BLOCK_SIZE 4096 // SIZE OF THE BLOCKg
-
+typedef int bool;
+#define true 1
+#define false 0
 typedef struct superblock{
 	int disk_descriptor; // Contains 30192 - some magic number that informs, that this is our file system
 	int blocks_for_inode_table; /* Number of blocks, which contains inode_table */

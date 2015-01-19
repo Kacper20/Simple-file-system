@@ -1,6 +1,7 @@
 #include "tools.h"
 /* Function copies file from vdisk to destination path */
 int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
+	bool found = false;
 	FILE *destinationFile;
 	FILE *disk;
 	FILE *temp; //temporary pointer to read
@@ -37,24 +38,17 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 	counter = 0;
 	mask = 0x80;
 	for (int i = 0; i < block.inode_number; i++){
-		printf("wchodzac jestesmy pointerem pliku na: %lu", ftell(disk));
 		temp_byte = inode_bitmap[counter];
-		printf("temp byte: %x", temp_byte);
-		printf("mask: %x", mask);
 		temp_byte = temp_byte & mask;
-		printf("temp byte po maskowaniu: %x", temp_byte);
 		if (temp_byte > 0){ /* if inode is in use */
 			printf("jest wiekszy od 0\n");
 			kread(&temp_inode, sizeof(inode), disk); // Read inode into the memory, to check it's filename
 			kread(pointers_to_blocks, block.inode_size - sizeof(inode), disk); // read pointers table
-			printf("pointers[0]: %d, pointers[1]: %d", pointers_to_blocks[0], pointers_to_blocks[1]);
-			printf("nazwa pliku przenoszonego to : %s\n", temp_inode.filename);
 			if (strcmp(temp_inode.filename, filename) == 0){ // If it's this file 
-			printf("nazwa jest taka sama\n");
+			found = true;
 			destinationFile = fopen(destination_path, "wb");/* opens file on disk */
 			temp = fopen(vdisk_name, "rb");
 				if (temp_inode.size_of_file > 0){
-					printf("wiekszy od 0\n");
 					counter = 0;
 					int temp_size = temp_inode.size_of_file;
 					kseek(temp, (3 + block.blocks_for_inode_table) * BLOCK_SIZE, SEEK_SET); // move to the begin of data structure table
@@ -64,17 +58,12 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 						temp_size -= BLOCK_SIZE;
 						counter ++;
 						if (temp_size > 0){ // We should read all of the block
-							printf("mniejszy");
-							fflush(stdout);
-							printf("czytajac caly blokjestem na! %lu\n", ftell(temp));
 							kread(buffer, BLOCK_SIZE, temp);							
 							kwrite(buffer, BLOCK_SIZE, destinationFile);
 							kseek(temp,  (pointers_to_blocks[counter] - pointers_to_blocks[counter-1] -1)*BLOCK_SIZE,SEEK_CUR);
 							
 						}
 						else{ // we should read temp_size + BLOCK_SIZE files :)
-							printf("mniejszy");
-							printf("czytajac %d blokjestem na! %lu\n",temp_size + BLOCK_SIZE, ftell(temp));
 							fflush(stdout);
 							kread(buffer, temp_size + BLOCK_SIZE, temp);
 							kwrite(buffer, temp_size + BLOCK_SIZE, destinationFile);
@@ -93,7 +82,6 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 			kseek(disk, block.inode_size, SEEK_CUR);
 			
 		}
-		printf("inold sajz to: %d", block.inode_size);
 		/* with every iteration move the pointer to next inode-structure if it's wrong inode(non-active)*/
 		printf("\na po przesunieciu jestesmy na %lu\n", ftell(disk));
 		mask = mask >> 1; /* check next bit */
@@ -101,6 +89,12 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 			mask = 0x80;
 			counter++;
 		}
+	}
+	if (found == true){
+		printf("Plik zostal skopiowany z systemu plikow\n");
+	}
+	else{
+		printf("No file to copy\n");
 	}
 	fclose(disk);
 	free(inode_bitmap);
@@ -110,5 +104,36 @@ int copy_on_disk(char *filename, char *vdisk_name, char *destination_path){
 }
 
 int main(int argc, char **argv){
-	copy_on_disk(argv[1], argv[2], argv[3]);
+	char *vmachine;
+	
+	if (argc  < 3){
+		if (argc == 2 && strcmp(argv[2], "--help") == 0){
+			printf("Uzycie:\n.%s PLIKI_DO_SKOPIOWANIE[...] VIRTUAL FILE SYSTEM", argv[0]);
+			return 0;
+		}
+		else{
+			printf("Nieprawidlowe wywolanie. wywolaj z opcja --help: %s --help\n", argv[0]);
+			return -1;
+		}
+		
+	}
+	char **arg_pointer = argv;
+	arg_pointer++;
+	while (*arg_pointer){
+		arg_pointer++;
+	}
+	arg_pointer--; // jestesmy na ostatnim wskazniku
+	vmachine = *arg_pointer;
+	printf("vmachine to : %s", vmachine);
+	arg_pointer = argv;
+	arg_pointer++;
+	while (*arg_pointer != vmachine){
+		printf("kopiujemy: %s\n", *arg_pointer);
+		if (copy_on_disk(*arg_pointer, vmachine, *arg_pointer) == -1){
+			printf("BLAD podczas kopiowania\n");
+		}
+		arg_pointer++;
+	}
+	
+	return 0;
 }

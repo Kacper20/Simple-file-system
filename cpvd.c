@@ -29,7 +29,9 @@ int copy_file_to_vd(char *filename, char *vd_name){
 		perror("Cannot open virtual disk");
 		return -1;
 	}
-	read_and_check_superblock(&block, disk);
+	if (read_and_check_superblock(&block, disk) == -1){
+		return -1;
+	}
 	int blocks_needed_to_copy_file = ceil(size_file_to_copy / BLOCK_SIZE);
 	
 	if (block.free_block_number < blocks_needed_to_copy_file){
@@ -78,6 +80,7 @@ int copy_file_to_vd(char *filename, char *vd_name){
 	fclose(secondDescriptor);
 	if (block.free_inode_number == 0){
 		printf("Too many files on virtual disk\n");
+		return -1;
 	}
 	kseek(disk, 3 * BLOCK_SIZE, SEEK_SET);
 	/* File pointer is at the beginning of inode structure table */
@@ -100,12 +103,12 @@ int copy_file_to_vd(char *filename, char *vd_name){
 			inode_bitmap[counter] = inode_bitmap[counter] | mask;
 			block.free_inode_number--;
 			/*Now write i-node description to i_node table */
-			printf("przed zapisaniem inode description: %lu\n", ftell(disk));
+			// printf("przed zapisaniem inode description: %lu\n", ftell(disk));
 			kwrite(&i_node, sizeof(inode), disk);
 			/* Inode description is written - now if file is non 0 size - take care of data blocks */
 			/* Now read pointers, update them, and write to the */
 			kread(pointers_to_blocks, sizeof(short) * block.block_number, disk);
-			printf("rozmiar to %d\n", size_file_to_copy);
+			printf("rozmiar to %lf\n", size_file_to_copy);
 			if (size_file_to_copy > 0){ 
 				mask = 0x80;
 				counter = 0;
@@ -115,18 +118,18 @@ int copy_file_to_vd(char *filename, char *vd_name){
 				kseek(secondDescriptor, (3 + temp) * BLOCK_SIZE, SEEK_CUR);
 				for(int i = 0; i < block.block_number; i++){
 					byte = data_bitmap[counter];
-					printf("bajt ma: %x\n", byte);
-					printf("maska ma: %x\n", mask);
+					// printf("bajt ma: %x\n", byte);
+					// printf("maska ma: %x\n", mask);
 					result = mask & byte;
 					if (result == 0){/*We have found data block  - bit is 0!*/						
 						temp = size_file_to_copy > BLOCK_SIZE ? BLOCK_SIZE : size_file_to_copy;
 						size_file_to_copy -= BLOCK_SIZE;
 						
 						kread(buffer, temp, file_to_copy);
-						printf("Zapisuje na: %lu rozmiar: %d\n", ftell(secondDescriptor), temp);
+						// printf("Zapisuje na: %lu rozmiar: %d\n", ftell(secondDescriptor), temp);
 						kwrite(buffer, temp, secondDescriptor);
 						block.free_block_number --;
-						printf("zapisujemy na pozycje: %d wartosc %d", pointer_counter, i);
+						// printf("zapisujemy na pozycje: %d wartosc %d", pointer_counter, i);
 						pointers_to_blocks[pointer_counter] = i;
 						printf("pointer: %d\n", pointers_to_blocks[pointer_counter]);
 						data_bitmap[counter] = data_bitmap[counter] | mask;
@@ -163,7 +166,7 @@ int copy_file_to_vd(char *filename, char *vd_name){
 			counter ++;
 		}
 	}/* koniec fora*/
-	printf("Pointers: 1 : %d, 2: %d\n", pointers_to_blocks[0], pointers_to_blocks[1]);
+	// printf("Pointers: 1 : %d, 2: %d\n", pointers_to_blocks[0], pointers_to_blocks[1]);
 	kseek(disk, 0, SEEK_SET);
 	kwrite(&block, sizeof(superblock), disk);
 	kseek(disk, BLOCK_SIZE - sizeof(superblock), SEEK_CUR);
@@ -182,8 +185,36 @@ int copy_file_to_vd(char *filename, char *vd_name){
 
 }
 int main(int argc, char **argv){
+	char *vmachine;
 	
-	copy_file_to_vd(argv[1], argv[2]);
+	if (argc  < 3){
+		if (argc == 2 && strcmp(argv[2], "--help") == 0){
+			printf("Uzycie:\n./cpvd PLIKI[...] VIRTUAL FILE SYSTEM");
+			return 0;
+		}
+		else{
+			printf("Nieprawidlowe wywolanie. wywolaj z opcja --help: %s --help\n", argv[0]);
+			return -1;
+		}
+		
+	}
+	char **arg_pointer = argv;
+	arg_pointer++;
+	while (*arg_pointer){
+		arg_pointer++;
+	}
+	arg_pointer--; // jestesmy na ostatnim wskazniku
+	vmachine = *arg_pointer;
+	printf("vmachine to : %s", vmachine);
+	arg_pointer = argv;
+	arg_pointer++;
+	while (*arg_pointer != vmachine){
+		printf("kopiujemy: %s\n", *arg_pointer);
+		if (copy_file_to_vd(*arg_pointer, vmachine) == -1){
+			return -1;
+		}
+		arg_pointer++;
+	}
 	
 	return 0;
 }

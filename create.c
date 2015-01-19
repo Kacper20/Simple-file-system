@@ -1,7 +1,7 @@
 
 
 #include "tools.h"
-
+#include "errno.h"
 /*
  * Function task is to create virtual file system in current directory 
  * int size - size of the system in kB
@@ -81,7 +81,8 @@ int create_vdisk(int size, const char *name){
 	return 0;
 }
 int main(int argc, char **argv){
-	int size;
+	long size;
+	char *end;
 	char *name;
 	if (argc == 2){
 		if (strcmp(argv[1], "--help") != 0){
@@ -90,7 +91,7 @@ int main(int argc, char **argv){
 		} 
 		else{
 			printf("Funkcja pozwalajaca stworzyc wirtualny dysk.\n");
-			printf("Uzycie: create ROZMIAR_DYSKU NAZWA\n");
+			printf("Uzycie: create ROZMIAR_DYSKU[KB] NAZWA\n");
 			return 0;
 		}
 	}
@@ -98,7 +99,11 @@ int main(int argc, char **argv){
 		printf("Nieprawidlowe wywolanie. Wiecej informacji : create --help\n");
 		return -1;
 	}
-	size = atoi(argv[1]);
+	size = strtol(argv[1], &end, 10);
+	if (end == argv[1] || *end != '\0' || errno == ERANGE){
+		printf("nieprawidlowe wywolanie. Wiecej informacji: create --help\n");
+		return -1;
+	}
 	name = argv[2];
 	
 	

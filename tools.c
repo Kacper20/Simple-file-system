@@ -61,6 +61,7 @@ void kwrite(void *buff, int size, FILE *file){
 }
 
 int remove_file_from_vd(char *filename, char *vd_name){
+	bool found = false;
 	FILE *disk;
 	char *inode_bitmap;
 	char *data_bitmap;
@@ -89,13 +90,12 @@ int remove_file_from_vd(char *filename, char *vd_name){
 	unsigned char mask = 0x80;
 	for (int i = 0; i < block.inode_number; i++){
 		byte = inode_bitmap[counter];
-		printf("Byte: %x", byte);
 		byte = byte & mask; /* if it's > 0 - inode is in use, we could check inode table if file name is the same! */
 		if (byte > 0){
 			inode temp_inode;
 			kread(&temp_inode, sizeof(inode), disk);
-			printf("inode name: %s", temp_inode.filename);
 			if (strcmp(filename, temp_inode.filename) == 0){ /* We have file, that has to be deleted */
+				found = true;
 				block.free_inode_number ++;
 				inode_bitmap[counter] = inode_bitmap[counter] ^ mask; /* remove it from inode bitmap */
 				if (temp_inode.size_of_file != 0){ /* if file consist some data - delete it from data bitmap */
@@ -103,7 +103,6 @@ int remove_file_from_vd(char *filename, char *vd_name){
 						perror("Cannot read bitmap_table");
 					}
 					/* Now - delete blocks from blocks bitmap */
-					printf("pierwszy w pointerach jest: %hu, a drugi: %hu\n", pointers_to_blocks[0], pointers_to_blocks[1]);
 					int blocks_count = ceil((double)temp_inode.size_of_file / BLOCK_SIZE); /* number of blocks that file consist */
 					temp = 0;
 					mask = 0x80;
@@ -147,7 +146,12 @@ int remove_file_from_vd(char *filename, char *vd_name){
 	free(inode_bitmap);
 	free(data_bitmap);
 	free(pointers_to_blocks);
-	
+	if (found == true){
+		printf("Plik zostal usuniety\n");
+	}
+	else{
+		printf("Nie znaleziono pliku do usuniecia \n");
+	}
 	fclose(disk);
 	return 0;
 	
