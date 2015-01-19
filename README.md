@@ -20,7 +20,11 @@ Jeśli tak - kopiujemy zawartość bloków wskazywanych przez i-node(uważamy na
 | 2                         | Bitmapy i-node   | BLOCK_SIZE         |
 | 3                         | Bitmapy danych   | 2 * BLOCK_SIZE     |
 | 4                         | Struktury i-node | 3 * BLOCK_SIZE     |
+<<<<<<< HEAD
 | 5                         | Bloki danych     |(3 + ceil((sizeof(inode) * number_of_blocks) / BLOCK_SIZE) * BLOCK_SIZE|
+=======
+| 5                         | Bloki danych     |                    |
+>>>>>>> FETCH_HEAD
 
 
 
